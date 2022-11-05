@@ -16,10 +16,14 @@ public class Fish : MonoBehaviour
     public Sprite fishDied;
     SpriteRenderer _sr;
     Animator anim;
+    public ObstacleSpawner obstaclespawner;
+    [SerializeField] private AudioSource swimSource, hitSource, pointSource;
+
 
     void Start()
     {
         _rb = GetComponent<Rigidbody2D>(); // Rigidbody2d component ini aktardik
+        _rb.gravityScale = 0;
         _sr = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
     }
@@ -40,8 +44,22 @@ public class Fish : MonoBehaviour
     {
          if(Input.GetMouseButtonDown(0) && GameManager.gameOver == false)
         {
-          _rb.velocity = Vector2.zero;
-          _rb.velocity = new Vector2(_rb.velocity.x,_speed); // Fish move
+            swimSource.Play();
+            if(GameManager.gameStarted == false)
+            {
+              _rb.gravityScale = 4f;
+              _rb.velocity = Vector2.zero;
+              _rb.velocity = new Vector2(_rb.velocity.x, _speed);
+              obstaclespawner.InstantLateObstacle();
+              gameManager.GameHasStarted();
+            }
+            else 
+            {
+               _rb.velocity = Vector2.zero;
+               _rb.velocity = new Vector2(_rb.velocity.x,_speed); // Fish move
+            }
+
+         
         }
     }
 
@@ -75,12 +93,19 @@ public class Fish : MonoBehaviour
         if(collision.CompareTag("Obstacle"))
         {
            score.Scored();
+           pointSource.Play();
         }
-        else if(collision.CompareTag("Column"))
+        else if(collision.CompareTag("Column") && GameManager.gameOver == false)
         {
            //gameover
+           FishDieEffects();
            gameManager.GameOver();
         }
+    }
+
+    void FishDieEffects()
+    {
+        hitSource.Play();
     }
 
     private void OnCollisionEnter2D(Collision2D collision) 
@@ -90,6 +115,7 @@ public class Fish : MonoBehaviour
             if(GameManager.gameOver == false)
             {
                 //gameover
+                FishDieEffects();
                 gameManager.GameOver();
                 GameOver();
             }
